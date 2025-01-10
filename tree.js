@@ -17,4 +17,15 @@ export class Tree {
         if (rand < 0.75) return 1;
         return 2;
     }
+
+    getAndGenerate() {
+        const temp = this.tree[1];
+        this.tree.shift();
+        this.tree.push(this.generate());
+        return temp;
+    }
+
+    get(index) {
+        return this.tree[index];
+    }
 }
