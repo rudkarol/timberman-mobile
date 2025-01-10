@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Timberman</title>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+    <script type="module">
+        import { Game } from './game.js';
+        
+        window.onload = () => {
+            new Game();
+        };
+    </script>
+</body>
+</html>
