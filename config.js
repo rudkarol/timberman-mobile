@@ -9,5 +9,10 @@ export const GameConfig = {
         HEIGHT: 150,
         SEGMENTS: 7,
         START_POS_Y: 900
+    },
+    PLAYER: {
+        RIGHT_X: 800,
+        LEFT_X: 400,
+        Y: 900
     }
 }

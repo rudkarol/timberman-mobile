@@ -30,4 +30,18 @@ export class Renderer {
             posY -= 150;
         }
     }
+
+    drawPlayer(isRightSide, isAnimating) {
+        const playerX = isRightSide ? GameConfig.PLAYER.RIGHT_X : GameConfig.PLAYER.LEFT_X;
+        const playerImage = isAnimating ? this.assets.player1 : this.assets.player;
+        
+        this.ctx.save();
+        if (!isRightSide) {
+            this.ctx.scale(-1, 1);
+            this.ctx.drawImage(playerImage, -playerX - 50, GameConfig.PLAYER.Y - 50);
+        } else {
+            this.ctx.drawImage(playerImage, playerX - 50, GameConfig.PLAYER.Y - 50);
+        }
+        this.ctx.restore();
+    }
 }
