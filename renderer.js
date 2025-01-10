@@ -21,10 +21,22 @@ export class Renderer {
         for (let i = 0; i < GameConfig.TREE.SEGMENTS; i++) {
             const node = tree.get(i);
             const img = this.assets[`tree${node}`];
-            const segmentWidth = node === 0 ? GameConfig.TREE.BASE_WIDTH : GameConfig.TREE.BRANCH_WIDTH;
+
+            let segmentWidth
+            if (node === 0) {
+                segmentWidth = GameConfig.TREE.BASE_WIDTH;
+            } else {
+                segmentWidth = GameConfig.TREE.BRANCH_WIDTH;
+            }
             
             const treeX = this.treeCenterX - (GameConfig.TREE.BASE_WIDTH / 2);
-            const xOffset = node === 0 ? 0 : (GameConfig.TREE.BRANCH_WIDTH - GameConfig.TREE.BASE_WIDTH) / 2;
+
+            let xOffset;
+            if (node === 0) {
+                xOffset = 0;
+            } else {
+                xOffset = (this.treeBranchWidth - this.treeBaseWidth) / 2;
+            }
             
             this.ctx.drawImage(img, treeX - xOffset, posY - GameConfig.TREE.HEIGHT/2);
             posY -= 150;
