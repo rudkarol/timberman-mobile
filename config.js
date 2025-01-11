@@ -14,5 +14,6 @@ export const GameConfig = {
         RIGHT_X: 800,
         LEFT_X: 400,
         Y: 900
-    }
+    },
+    CLICK_COOLDOWN: 500
 }

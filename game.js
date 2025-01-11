@@ -13,6 +13,7 @@ export class Game {
         this.points = 0;
         this.playerAnimationStatus = false;
         this.scale = 1;
+        this.lastGameEndTime = 0;
         
         this.init();
     }
@@ -69,10 +70,12 @@ export class Game {
 
     setupInput() {
         const handleInteraction = (x) => {
+            const currentTime = Date.now();
+            
             if (this.gameStatus) {
                 const centerX = this.canvas.width / 2;
                 this.playerAction(x > centerX ? 1 : 0);
-            } else {
+            } else if (currentTime - this.lastGameEndTime > GameConfig.CLICK_COOLDOWN) {
                 this.startGame();
             }
         }
