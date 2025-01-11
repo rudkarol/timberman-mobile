@@ -1,4 +1,4 @@
-import { GameConfig } from './config.js';
+import { GameConfig } from "./config.js";
 
 export class Renderer {
     constructor(ctx, assets) {
@@ -13,6 +13,16 @@ export class Renderer {
 
     drawBackground() {
         this.ctx.drawImage(this.assets.background, 0, 0, GameConfig.CANVAS.WIDTH, GameConfig.CANVAS.HEIGHT);
+    }
+
+    drawUI(points, gameStatus) {
+        this.ctx.font = "30px PressStart2P";
+        this.ctx.fillStyle = "black";
+        this.ctx.fillText("Points: ${points}", 20, 50);
+
+        if (!gameStatus) {
+            this.ctx.fillText("CLICK TO START", 800, 50);
+        }
     }
 
     drawTree(tree) {
