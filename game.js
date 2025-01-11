@@ -21,4 +21,26 @@ export class Game {
         this.assets = await AssetLoader.loadAssets();
         this.renderer = new Renderer(this.ctx, this.assets);
     }
+
+    startGame() {
+        this.tree.loadArray();
+        this.points = 0;
+        this.gameStatus = true;
+    }
+
+    draw() {
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this.ctx.scale(this.scale, this.scale);
+        
+        this.renderer.clearScreen();
+        this.renderer.drawBackground();
+        this.renderer.drawUI(this.points, this.gameStatus);
+        this.renderer.drawTree(this.tree);
+        this.renderer.drawPlayer(this.currentPosition, this.playerAnimationStatus);
+    }
+
+    gameLoop() {
+        this.draw();
+        requestAnimationFrame(() => this.gameLoop());
+    }
 }
