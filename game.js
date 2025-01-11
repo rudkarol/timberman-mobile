@@ -18,8 +18,10 @@ export class Game {
     }
 
     async init() {
+        this.setupInput();
         this.assets = await AssetLoader.loadAssets();
         this.renderer = new Renderer(this.ctx, this.assets);
+        this.gameLoop();
     }
 
     startGame() {
@@ -63,6 +65,29 @@ export class Game {
         } else {
             this.points++;
         }
+    }
+
+    setupInput() {
+        const handleInteraction = (x) => {
+            if (this.gameStatus) {
+                const centerX = this.canvas.width / 2;
+                this.playerAction(x > centerX ? 1 : 0);
+            } else {
+                this.startGame();
+            }
+        }
+
+        this.canvas.addEventListener('touchstart', (event) => {
+            event.preventDefault();
+            const touch = event.touches[0];
+            const rect = this.canvas.getBoundingClientRect();
+            handleInteraction(touch.clientX - rect.left);
+        })
+
+        this.canvas.addEventListener('click', (event) => {
+            const rect = this.canvas.getBoundingClientRect();
+            handleInteraction(event.clientX - rect.left);
+        })
     }
 
 }
