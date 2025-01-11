@@ -43,4 +43,26 @@ export class Game {
         this.draw();
         requestAnimationFrame(() => this.gameLoop());
     }
+
+    playerAction(position) {
+        if (position !== -1) {
+            this.currentPosition = Boolean(position);
+            this.playerAnimationStatus = true;
+            setTimeout(() => {this.playerAnimationStatus = false}, 40);
+            this.cutTree();
+        }
+    }
+
+    cutTree() {
+        const treeStatus = this.tree.getAndGenerate();
+
+        if ((treeStatus === 1 && !this.currentPosition) || 
+            (treeStatus === 2 && this.currentPosition)) {
+            this.gameStatus = false;
+            this.lastGameEndTime = Date.now();
+        } else {
+            this.points++;
+        }
+    }
+
 }
