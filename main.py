@@ -41,6 +41,13 @@ class Position(Enum):
     RIGHT = 1
 
 
+class TreeSegment(Enum):
+    EMPTY = 0
+    LEFT_BRANCH = 1
+    RIGHT_BRANCH = 2
+    ANIMAL = 3
+
+
 class Game:
     def __init__(self):
         self.window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -52,6 +59,7 @@ class Game:
         self.tree_empty = pygame.image.load("assets/textures/tree0.png")
         self.tree_left = pygame.image.load("assets/textures/tree1.png")
         self.tree_right = pygame.image.load("assets/textures/tree2.png")
+        self.owl = pygame.image.load("assets/textures/owl.png")
         self.player = pygame.image.load("assets/textures/player.png")
         self.player_chopping = pygame.image.load("assets/textures/player1.png")
 
@@ -85,8 +93,15 @@ class Game:
             START_BUTTON_HEIGHT
         )
 
+        self.rescue_button = pygame.Rect(
+            WINDOW_WIDTH // 2 - 75,
+            WINDOW_HEIGHT - 100,
+            150,
+            50
+        )
+
     def reset_game(self):
-        self.tree = [0, 0]
+        self.tree = [TreeSegment.EMPTY, TreeSegment.EMPTY]
 
         for _ in range(5):
             self.tree.append(self.generate_segment())
@@ -97,6 +112,8 @@ class Game:
         self.player_chopping_animation = False
         self.animation_timer = 0
         self.game_over_sound_played = False
+        self.show_rescue_button = False
+        self.animal_rescued = False
 
         # Time
         self.remaining_time = INITIAL_TIME
@@ -105,21 +122,28 @@ class Game:
         self.show_record_text = False
 
     def generate_segment(self):
-        # 50% empty, 25% left branch, 25% right branch
-        return random.choices([0, 1, 2], weights=[2, 1, 1])[0]
+        # 51% empty, 24% left branch, 24% right branch, 1% animal
+        return random.choices(
+            [TreeSegment.EMPTY, TreeSegment.LEFT_BRANCH, TreeSegment.RIGHT_BRANCH, TreeSegment.ANIMAL],
+            weights=[51, 24, 24, 1])[0]
 
     def handle_mouse_click(self, pos):
-        if self.nickname_active and len(self.nickname) > 0:
-            if self.nickname_start_button.collidepoint(pos):
+        if self.nickname_active:
+            if len(self.nickname) > 0 and self.nickname_start_button.collidepoint(pos):
                 self.nickname_active = False
-                return
+            return
 
         if not self.game_running:
             if self.start_button_rect.collidepoint(pos):
                 self.reset_game()
                 self.game_running = True
                 return
-        else:
+
+        if self.game_running:
+            if self.show_rescue_button and self.rescue_button.collidepoint(pos):
+                self.rescue_animal()
+                return
+
             x, y = pos
 
             if x < SCREEN_MIDDLE:
@@ -131,15 +155,25 @@ class Game:
             self.animation_timer = pygame.time.get_ticks()
             self.cut_tree()
 
+    def rescue_animal(self):
+        self.animal_rescued = True
+        self.show_rescue_button = False
+        self.points += 5
+
     def cut_tree(self):
         current_segment = self.tree[1]
+
+        if current_segment == TreeSegment.ANIMAL and not self.animal_rescued:
+            self.points = max(0, self.points - 10)
 
         self.tree.pop(0)
         self.tree.append(self.generate_segment())
 
+        self.animal_rescued = False
+
         # Player collision with branch
-        if ((current_segment == 1 and self.player_position == Position.LEFT) or
-                (current_segment == 2 and self.player_position == Position.RIGHT)):
+        if ((current_segment == TreeSegment.LEFT_BRANCH and self.player_position == Position.LEFT) or
+                (current_segment == TreeSegment.RIGHT_BRANCH and self.player_position == Position.RIGHT)):
             self.game_running = False
             self.death_sound.play()
 
@@ -154,7 +188,6 @@ class Game:
             except Exception as e:
                 print(e)
 
-
             return
 
         self.chop_sound.play()
@@ -164,6 +197,11 @@ class Game:
         time_reduction = (self.points // 10) * TIME_ACCELERATION
         bonus = max(MIN_TIME_BONUS, TIME_BONUS - time_reduction)
         self.remaining_time = min(self.remaining_time + bonus, MAX_TIME)
+
+        if self.tree[1] == TreeSegment.ANIMAL:
+            self.show_rescue_button = True
+        else:
+            self.show_rescue_button = False
 
     def draw_start_button(self):
         pygame.draw.rect(self.window, WHITE, self.start_button_rect)
@@ -255,15 +293,22 @@ class Game:
 
         for segment in self.tree[:7]:
             tree_sprite = None
-            if segment == 0:
+            if segment == TreeSegment.EMPTY:
                 tree_sprite = self.tree_empty
-            elif segment == 1:
+            elif segment == TreeSegment.LEFT_BRANCH:
                 tree_sprite = self.tree_left
-            else:
+            elif segment == TreeSegment.RIGHT_BRANCH:
                 tree_sprite = self.tree_right
+            elif segment == TreeSegment.ANIMAL:
+                tree_sprite = self.tree_empty
 
             sprite_rect = tree_sprite.get_rect(center=(220, y_pos))
             self.window.blit(tree_sprite, sprite_rect)
+
+            if segment == TreeSegment.ANIMAL:
+                owl_rect = self.owl.get_rect(center=(220, y_pos))
+                self.window.blit(self.owl, owl_rect)
+
             y_pos -= 135
 
         # Draw player
@@ -282,6 +327,13 @@ class Game:
         nickname_text = self.small_font.render(self.nickname, True, BLACK)
         self.window.blit(score_text, (380 - score_text.get_width() // 2, 30 - score_text.get_height() // 2))
         self.window.blit(nickname_text, (220 - nickname_text.get_width() // 2, 30 - nickname_text.get_height() // 2))
+
+        # Draw rescue button
+        if self.show_rescue_button and self.game_running:
+            pygame.draw.rect(self.window, GREEN, self.rescue_button)
+            rescue_text = self.small_font.render("RESCUE", True, BLACK)
+            text_rect = rescue_text.get_rect(center=self.rescue_button.center)
+            self.window.blit(rescue_text, text_rect)
 
         # Draw start/game over text
         if not self.game_running:
