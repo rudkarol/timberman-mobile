@@ -72,14 +72,15 @@ class Game:
     def cut_tree(self):
         current_segment = self.tree[1]
 
+        self.tree.pop(0)
+        self.tree.append(self.generate_segment())
+
         # Player collision with branch
         if ((current_segment == 1 and self.player_position == Position.LEFT) or
                 (current_segment == 2 and self.player_position == Position.RIGHT)):
             self.game_running = False
             return
 
-        self.tree.pop(0)
-        self.tree.append(self.generate_segment())
         self.points += 1
 
         # Add time bonus
@@ -210,18 +211,6 @@ class Game:
                     elif event.key == pygame.K_SPACE:
                         self.reset_game()
                         self.game_running = True
-
-                elif event.type == pygame.MOUSEBUTTONDOWN and self.game_running:
-                    if event.button == 1:  # Left click
-                        self.player_position = Position.LEFT
-                        self.player_chopping_animation = True
-                        self.animation_timer = pygame.time.get_ticks()
-                        self.cut_tree()
-                    elif event.button == 3:  # Right click
-                        self.player_position = Position.RIGHT
-                        self.player_chopping_animation = True
-                        self.animation_timer = pygame.time.get_ticks()
-                        self.cut_tree()
 
             # Update time
             self.update_time()
