@@ -71,10 +71,22 @@ class Game:
 
         self.show_record_text = False
 
-        self.start_button_rect = pygame.Rect(START_BUTTON_X, START_BUTTON_Y, START_BUTTON_WIDTH, START_BUTTON_HEIGHT)
+        self.start_button_rect = pygame.Rect(
+            START_BUTTON_X,
+            START_BUTTON_Y,
+            START_BUTTON_WIDTH,
+            START_BUTTON_HEIGHT
+        )
+
+        self.nickname_start_button = pygame.Rect(
+            (WINDOW_WIDTH - START_BUTTON_WIDTH) // 2,
+            WINDOW_HEIGHT // 3 + 60,
+            START_BUTTON_WIDTH,
+            START_BUTTON_HEIGHT
+        )
 
     def reset_game(self):
-        self.tree = [0, 0]  # Start with two empty segments
+        self.tree = [0, 0]
 
         for _ in range(5):
             self.tree.append(self.generate_segment())
@@ -97,8 +109,10 @@ class Game:
         return random.choices([0, 1, 2], weights=[2, 1, 1])[0]
 
     def handle_mouse_click(self, pos):
-        if self.nickname_active:
-            return
+        if self.nickname_active and len(self.nickname) > 0:
+            if self.nickname_start_button.collidepoint(pos):
+                self.nickname_active = False
+                return
 
         if not self.game_running:
             if self.start_button_rect.collidepoint(pos):
@@ -155,7 +169,6 @@ class Game:
         pygame.draw.rect(self.window, WHITE, self.start_button_rect)
         pygame.draw.rect(self.window, BLACK, self.start_button_rect, 2)
 
-
         button_text = self.font.render("START", True, BLACK)
         text_rect = button_text.get_rect(center=self.start_button_rect.center)
         self.window.blit(button_text, text_rect)
@@ -175,9 +188,12 @@ class Game:
         self.window.blit(prompt_text, prompt_rect)
 
         if len(self.nickname) > 0:
-            enter_text = self.small_font.render("Press Enter to Start", True, BLACK)
-            enter_rect = enter_text.get_rect(centerx=WINDOW_WIDTH // 2, top=input_box.bottom + 10)
-            self.window.blit(enter_text, enter_rect)
+            pygame.draw.rect(self.window, WHITE, self.nickname_start_button)
+            pygame.draw.rect(self.window, BLACK, self.nickname_start_button, 2)
+
+            start_text = self.font.render("START", True, BLACK)
+            start_text_rect = start_text.get_rect(center=self.nickname_start_button.center)
+            self.window.blit(start_text, start_text_rect)
 
     def update_time(self):
         if not self.game_running:
@@ -285,7 +301,6 @@ class Game:
     def run(self):
         running = True
         while running:
-            # Events handling
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -295,9 +310,7 @@ class Game:
 
                 if event.type == pygame.KEYDOWN:
                     if self.nickname_active:
-                        if event.key == pygame.K_RETURN and len(self.nickname) > 0:
-                            self.nickname_active = False
-                        elif event.key == pygame.K_BACKSPACE:
+                        if event.key == pygame.K_BACKSPACE:
                             self.nickname = self.nickname[:-1]
                         elif len(self.nickname) < MAX_NICKNAME_LENGTH and event.unicode.isalnum():
                             self.nickname += event.unicode
