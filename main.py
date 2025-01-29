@@ -2,7 +2,6 @@ import pygame
 import random
 from enum import Enum
 
-
 pygame.init()
 
 WINDOW_WIDTH = 440
@@ -23,6 +22,8 @@ BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
 GREEN = (0, 255, 0)
+
+MAX_NICKNAME_LENGTH = 9
 
 
 class Position(Enum):
@@ -46,9 +47,12 @@ class Game:
 
         # Load font
         self.font = pygame.font.Font("assets/font/PressStart2P-Regular.ttf", 30)
+        self.small_font = pygame.font.Font("assets/font/PressStart2P-Regular.ttf", 20)
 
-        # Initialize game state
         self.reset_game()
+
+        self.nickname = ""
+        self.nickname_active = True
 
     def reset_game(self):
         self.tree = [0, 0]  # Start with two empty segments
@@ -89,6 +93,25 @@ class Game:
         bonus = max(MIN_TIME_BONUS, TIME_BONUS - time_reduction)
         self.remaining_time = min(self.remaining_time + bonus, MAX_TIME)
 
+    def draw_nickname_input(self):
+        # Input field
+        input_box = pygame.Rect(WINDOW_WIDTH // 4, WINDOW_HEIGHT // 3, WINDOW_WIDTH // 2, 40)
+        pygame.draw.rect(self.window, WHITE, input_box)
+        pygame.draw.rect(self.window, BLACK, input_box, 2)
+
+        nickname_surface = self.small_font.render(self.nickname, True, BLACK)
+        nickname_rect = nickname_surface.get_rect(center=input_box.center)
+        self.window.blit(nickname_surface, nickname_rect)
+
+        prompt_text = self.small_font.render("Enter Nickname:", True, BLACK)
+        prompt_rect = prompt_text.get_rect(centerx=WINDOW_WIDTH // 2, bottom=input_box.top - 10)
+        self.window.blit(prompt_text, prompt_rect)
+
+        if len(self.nickname) > 0:
+            enter_text = self.small_font.render("Press Enter to Start", True, BLACK)
+            enter_rect = enter_text.get_rect(centerx=WINDOW_WIDTH // 2, top=input_box.bottom + 10)
+            self.window.blit(enter_text, enter_rect)
+
     def update_time(self):
         if not self.game_running:
             return
@@ -103,21 +126,21 @@ class Game:
             self.game_running = False
 
     def draw_timer_bar(self):
-        # Background
+        # Black background
         timer_rect = pygame.Rect(
             TIMER_BAR_POS_lEFT,
-            TIMER_BAR_POS_TOP,
-            WINDOW_WIDTH / 4,
+            TIMER_BAR_POS_TOP - TIMER_BAR_HEIGHT // 2,
+            WINDOW_WIDTH // 4,
             TIMER_BAR_HEIGHT
         )
         pygame.draw.rect(self.window, BLACK, timer_rect)
 
         # Timer bar
         if self.remaining_time > 0:
-            fill_width = (self.remaining_time / MAX_TIME) * (WINDOW_WIDTH / 4)
+            fill_width = (self.remaining_time / MAX_TIME) * (WINDOW_WIDTH // 4)
             fill_rect = pygame.Rect(
                 TIMER_BAR_POS_lEFT,
-                TIMER_BAR_POS_TOP,
+                TIMER_BAR_POS_TOP - TIMER_BAR_HEIGHT // 2,
                 fill_width,
                 TIMER_BAR_HEIGHT
             )
@@ -135,7 +158,10 @@ class Game:
         # Background
         self.window.blit(self.background, (0, 0))
 
-        # Timer
+        if self.nickname_active:
+            self.draw_nickname_input()
+            return
+
         self.draw_timer_bar()
 
         # Tree
@@ -165,22 +191,24 @@ class Game:
         sprite_rect = player_sprite.get_rect(center=(player_x, 810))
         self.window.blit(player_sprite, sprite_rect)
 
-        # Draw score
+        # Draw score and nickname
         score_text = self.font.render(str(self.points), True, BLACK)
-        self.window.blit(score_text, (380 - score_text.get_width() / 2, 30))
+        nickname_text = self.small_font.render(self.nickname, True, BLACK)
+        self.window.blit(score_text, (380 - score_text.get_width() // 2, 30 - score_text.get_height() // 2))
+        self.window.blit(nickname_text, (220 - nickname_text.get_width() // 2, 30 - nickname_text.get_height() // 2))
 
-        # Draw start text
+        # Draw start/game over text
         if not self.game_running:
             if self.points == 0:
                 start_text = self.font.render("START", True, BLACK)
                 space_text = self.font.render("Press Space", True, BLACK)
-                self.window.blit(start_text, (220 - start_text.get_width() / 2, 300))
-                self.window.blit(space_text, (220 - space_text.get_width() / 2, 400))
+                self.window.blit(start_text, (220 - start_text.get_width() // 2, 300))
+                self.window.blit(space_text, (220 - space_text.get_width() // 2, 400))
             else:
                 game_over_text = self.font.render("GAME OVER", True, BLACK)
                 space_text = self.font.render("Press Space", True, BLACK)
-                self.window.blit(game_over_text, (220 - game_over_text.get_width() / 2, 300))
-                self.window.blit(space_text, (220 - space_text.get_width() / 2, 400))
+                self.window.blit(game_over_text, (220 - game_over_text.get_width() // 2, 300))
+                self.window.blit(space_text, (220 - space_text.get_width() // 2, 400))
 
     def run(self):
         running = True
@@ -191,7 +219,14 @@ class Game:
                     running = False
 
                 if event.type == pygame.KEYDOWN:
-                    if self.game_running:
+                    if self.nickname_active:
+                        if event.key == pygame.K_RETURN and len(self.nickname) > 0:
+                            self.nickname_active = False
+                        elif event.key == pygame.K_BACKSPACE:
+                            self.nickname = self.nickname[:-1]
+                        elif len(self.nickname) < MAX_NICKNAME_LENGTH and event.unicode.isalnum():
+                            self.nickname += event.unicode
+                    elif self.game_running:
                         if event.key in (pygame.K_a, pygame.K_LEFT):
                             self.player_position = Position.LEFT
                             self.player_chopping_animation = True
