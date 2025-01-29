@@ -5,8 +5,8 @@ from enum import Enum
 
 pygame.init()
 
-WINDOW_WIDTH = 1200
-WINDOW_HEIGHT = 1050
+WINDOW_WIDTH = 440
+WINDOW_HEIGHT = 956
 FPS = 60
 
 INITIAL_TIME = 5000  # 5 sec start time
@@ -15,7 +15,8 @@ TIME_BONUS = 400  # Time bonus
 MIN_TIME_BONUS = 150  # Min time bonus
 TIME_ACCELERATION = 30  # Reduce time bonus
 TIMER_BAR_HEIGHT = 30
-TIMER_BAR_MARGIN = 10
+TIMER_BAR_POS_TOP = 30
+TIMER_BAR_POS_lEFT = 10
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -104,19 +105,19 @@ class Game:
     def draw_timer_bar(self):
         # Background
         timer_rect = pygame.Rect(
-            TIMER_BAR_MARGIN,
-            TIMER_BAR_MARGIN,
-            WINDOW_WIDTH / 4 - 2 * TIMER_BAR_MARGIN,
+            TIMER_BAR_POS_lEFT,
+            TIMER_BAR_POS_TOP,
+            WINDOW_WIDTH / 4,
             TIMER_BAR_HEIGHT
         )
         pygame.draw.rect(self.window, BLACK, timer_rect)
 
         # Timer bar
         if self.remaining_time > 0:
-            fill_width = (self.remaining_time / MAX_TIME) * (WINDOW_WIDTH / 4 - 2 * TIMER_BAR_MARGIN)
+            fill_width = (self.remaining_time / MAX_TIME) * (WINDOW_WIDTH / 4)
             fill_rect = pygame.Rect(
-                TIMER_BAR_MARGIN,
-                TIMER_BAR_MARGIN,
+                TIMER_BAR_POS_lEFT,
+                TIMER_BAR_POS_TOP,
                 fill_width,
                 TIMER_BAR_HEIGHT
             )
@@ -130,13 +131,6 @@ class Game:
 
             pygame.draw.rect(self.window, color, fill_rect)
 
-            # Draw Timer bar
-            max_time_x = TIMER_BAR_MARGIN + (WINDOW_WIDTH - 2 * TIMER_BAR_MARGIN)
-            pygame.draw.line(self.window, WHITE,
-                             (max_time_x, TIMER_BAR_MARGIN),
-                             (max_time_x, TIMER_BAR_MARGIN + TIMER_BAR_HEIGHT),
-                             2)
-
     def draw(self):
         # Background
         self.window.blit(self.background, (0, 0))
@@ -145,7 +139,7 @@ class Game:
         self.draw_timer_bar()
 
         # Tree
-        y_pos = 900
+        y_pos = 810
 
         for segment in self.tree[:7]:
             tree_sprite = None
@@ -156,37 +150,37 @@ class Game:
             else:
                 tree_sprite = self.tree_right
 
-            sprite_rect = tree_sprite.get_rect(center=(600, y_pos))
+            sprite_rect = tree_sprite.get_rect(center=(220, y_pos))
             self.window.blit(tree_sprite, sprite_rect)
-            y_pos -= 150
+            y_pos -= 135
 
         # Draw player
         player_sprite = self.player_chopping if self.player_chopping_animation else self.player
-        player_x = 800 if self.player_position == Position.RIGHT else 400
+        player_x = 380 if self.player_position == Position.RIGHT else 60
 
         # Flip player sprite
         if self.player_position == Position.LEFT:
             player_sprite = pygame.transform.flip(player_sprite, True, False)
 
-        sprite_rect = player_sprite.get_rect(center=(player_x, 900))
+        sprite_rect = player_sprite.get_rect(center=(player_x, 810))
         self.window.blit(player_sprite, sprite_rect)
 
         # Draw score
-        score_text = self.font.render(f"Points: {self.points}", True, BLACK)
-        self.window.blit(score_text, (20, 50))
+        score_text = self.font.render(str(self.points), True, BLACK)
+        self.window.blit(score_text, (380 - score_text.get_width() / 2, 30))
 
         # Draw start text
         if not self.game_running:
             if self.points == 0:
                 start_text = self.font.render("START", True, BLACK)
-                space_text = self.font.render("Space", True, BLACK)
-                self.window.blit(start_text, (1000, 50))
-                self.window.blit(space_text, (1000, 90))
+                space_text = self.font.render("Press Space", True, BLACK)
+                self.window.blit(start_text, (220 - start_text.get_width() / 2, 300))
+                self.window.blit(space_text, (220 - space_text.get_width() / 2, 400))
             else:
                 game_over_text = self.font.render("GAME OVER", True, BLACK)
-                restart_text = self.font.render("Press Space", True, BLACK)
-                self.window.blit(game_over_text, (900, 50))
-                self.window.blit(restart_text, (900, 90))
+                space_text = self.font.render("Press Space", True, BLACK)
+                self.window.blit(game_over_text, (220 - game_over_text.get_width() / 2, 300))
+                self.window.blit(space_text, (220 - space_text.get_width() / 2, 400))
 
     def run(self):
         running = True
