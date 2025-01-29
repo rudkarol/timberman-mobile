@@ -10,6 +10,7 @@ pygame.mixer.init()
 
 WINDOW_WIDTH = 440
 WINDOW_HEIGHT = 956
+SCREEN_MIDDLE = WINDOW_WIDTH // 2
 FPS = 60
 
 INITIAL_TIME = 5000  # 5 sec start time
@@ -87,6 +88,21 @@ class Game:
     def generate_segment(self):
         # 50% empty, 25% left branch, 25% right branch
         return random.choices([0, 1, 2], weights=[2, 1, 1])[0]
+
+    def handle_mouse_click(self, pos):
+        if not self.game_running or self.nickname_active:
+            return
+
+        x, y = pos
+
+        if x < SCREEN_MIDDLE:
+            self.player_position = Position.LEFT
+        else:
+            self.player_position = Position.RIGHT
+
+        self.player_chopping_animation = True
+        self.animation_timer = pygame.time.get_ticks()
+        self.cut_tree()
 
     def cut_tree(self):
         current_segment = self.tree[1]
@@ -233,14 +249,14 @@ class Game:
         if not self.game_running:
             if self.points == 0:
                 start_text = self.font.render("START", True, BLACK)
-                space_text = self.small_font.render("Press Space", True, BLACK)
+                click_text = self.small_font.render("Click to start", True, BLACK)
                 self.window.blit(start_text, (220 - start_text.get_width() // 2, 300))
-                self.window.blit(space_text, (220 - space_text.get_width() // 2, 350))
+                self.window.blit(click_text, (220 - click_text.get_width() // 2, 350))
             else:
                 game_over_text = self.font.render("GAME OVER", True, BLACK)
-                space_text = self.small_font.render("Press Space", True, BLACK)
+                click_text = self.small_font.render("Click to start", True, BLACK)
                 self.window.blit(game_over_text, (220 - game_over_text.get_width() // 2, 300))
-                self.window.blit(space_text, (220 - space_text.get_width() // 2, 350))
+                self.window.blit(click_text, (220 - click_text.get_width() // 2, 350))
 
                 if self.show_record_text:
                     record_text = self.font.render("NEW RECORD!", True, BLACK)
@@ -253,6 +269,9 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    self.handle_mouse_click(event.pos)
 
                 if event.type == pygame.KEYDOWN:
                     if self.nickname_active:
