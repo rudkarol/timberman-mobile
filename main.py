@@ -2,6 +2,9 @@ import pygame
 import random
 from enum import Enum
 
+import connection
+
+
 pygame.init()
 pygame.mixer.init()
 
@@ -60,6 +63,8 @@ class Game:
         self.nickname = ""
         self.nickname_active = True
 
+        self.show_record_text = False
+
     def reset_game(self):
         self.tree = [0, 0]  # Start with two empty segments
 
@@ -77,6 +82,8 @@ class Game:
         self.remaining_time = INITIAL_TIME
         self.last_update = pygame.time.get_ticks()
 
+        self.show_record_text = False
+
     def generate_segment(self):
         # 50% empty, 25% left branch, 25% right branch
         return random.choices([0, 1, 2], weights=[2, 1, 1])[0]
@@ -92,6 +99,19 @@ class Game:
                 (current_segment == 2 and self.player_position == Position.RIGHT)):
             self.game_running = False
             self.death_sound.play()
+
+            try:
+                user_data = connection.get_user_max_scores(self.nickname)
+                if not user_data.items:
+                    connection.create_user(self.nickname, self.points)
+                else:
+                    if self.points > user_data.items[0].score:
+                        self.show_record_text = True
+                        connection.update_user_max_scores(user_data.items[0].id, self.points)
+            except Exception as e:
+                print(e)
+
+
             return
 
         self.chop_sound.play()
@@ -213,14 +233,18 @@ class Game:
         if not self.game_running:
             if self.points == 0:
                 start_text = self.font.render("START", True, BLACK)
-                space_text = self.font.render("Press Space", True, BLACK)
+                space_text = self.small_font.render("Press Space", True, BLACK)
                 self.window.blit(start_text, (220 - start_text.get_width() // 2, 300))
-                self.window.blit(space_text, (220 - space_text.get_width() // 2, 400))
+                self.window.blit(space_text, (220 - space_text.get_width() // 2, 350))
             else:
                 game_over_text = self.font.render("GAME OVER", True, BLACK)
-                space_text = self.font.render("Press Space", True, BLACK)
+                space_text = self.small_font.render("Press Space", True, BLACK)
                 self.window.blit(game_over_text, (220 - game_over_text.get_width() // 2, 300))
-                self.window.blit(space_text, (220 - space_text.get_width() // 2, 400))
+                self.window.blit(space_text, (220 - space_text.get_width() // 2, 350))
+
+                if self.show_record_text:
+                    record_text = self.font.render("NEW RECORD!", True, BLACK)
+                    self.window.blit(record_text, (220 - record_text.get_width() // 2, 500))
 
     def run(self):
         running = True
