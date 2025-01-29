@@ -3,6 +3,7 @@ import random
 from enum import Enum
 
 pygame.init()
+pygame.mixer.init()
 
 WINDOW_WIDTH = 440
 WINDOW_HEIGHT = 956
@@ -49,6 +50,11 @@ class Game:
         self.font = pygame.font.Font("assets/font/PressStart2P-Regular.ttf", 30)
         self.small_font = pygame.font.Font("assets/font/PressStart2P-Regular.ttf", 20)
 
+        # Load sounds
+        self.chop_sound = pygame.mixer.Sound("assets/sounds/chop.wav")
+        self.death_sound = pygame.mixer.Sound("assets/sounds/death.wav")
+        self.out_of_time_sound = pygame.mixer.Sound("assets/sounds/out_of_time.wav")
+
         self.reset_game()
 
         self.nickname = ""
@@ -65,6 +71,7 @@ class Game:
         self.game_running = False
         self.player_chopping_animation = False
         self.animation_timer = 0
+        self.game_over_sound_played = False
 
         # Time
         self.remaining_time = INITIAL_TIME
@@ -84,8 +91,10 @@ class Game:
         if ((current_segment == 1 and self.player_position == Position.LEFT) or
                 (current_segment == 2 and self.player_position == Position.RIGHT)):
             self.game_running = False
+            self.death_sound.play()
             return
 
+        self.chop_sound.play()
         self.points += 1
 
         # Add time bonus
@@ -124,6 +133,9 @@ class Game:
         if self.remaining_time <= 0:
             self.remaining_time = 0
             self.game_running = False
+            if not self.game_over_sound_played:
+                self.out_of_time_sound.play()
+                self.game_over_sound_played = True
 
     def draw_timer_bar(self):
         # Black background
