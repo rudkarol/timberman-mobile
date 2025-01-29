@@ -156,9 +156,11 @@ class Game:
             self.cut_tree()
 
     def rescue_animal(self):
-        self.animal_rescued = True
-        self.show_rescue_button = False
-        self.points += 5
+        if self.tree[1] == TreeSegment.ANIMAL:
+            self.tree[1] = TreeSegment.EMPTY
+            self.animal_rescued = True
+            self.show_rescue_button = False
+            self.points += 5
 
     def cut_tree(self):
         current_segment = self.tree[1]
