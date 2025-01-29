@@ -30,6 +30,11 @@ GREEN = (0, 255, 0)
 
 MAX_NICKNAME_LENGTH = 9
 
+START_BUTTON_WIDTH = 200
+START_BUTTON_HEIGHT = 50
+START_BUTTON_X = (WINDOW_WIDTH - START_BUTTON_WIDTH) // 2
+START_BUTTON_Y = 400
+
 
 class Position(Enum):
     LEFT = 0
@@ -66,6 +71,8 @@ class Game:
 
         self.show_record_text = False
 
+        self.start_button_rect = pygame.Rect(START_BUTTON_X, START_BUTTON_Y, START_BUTTON_WIDTH, START_BUTTON_HEIGHT)
+
     def reset_game(self):
         self.tree = [0, 0]  # Start with two empty segments
 
@@ -90,19 +97,25 @@ class Game:
         return random.choices([0, 1, 2], weights=[2, 1, 1])[0]
 
     def handle_mouse_click(self, pos):
-        if not self.game_running or self.nickname_active:
+        if self.nickname_active:
             return
 
-        x, y = pos
-
-        if x < SCREEN_MIDDLE:
-            self.player_position = Position.LEFT
+        if not self.game_running:
+            if self.start_button_rect.collidepoint(pos):
+                self.reset_game()
+                self.game_running = True
+                return
         else:
-            self.player_position = Position.RIGHT
+            x, y = pos
 
-        self.player_chopping_animation = True
-        self.animation_timer = pygame.time.get_ticks()
-        self.cut_tree()
+            if x < SCREEN_MIDDLE:
+                self.player_position = Position.LEFT
+            else:
+                self.player_position = Position.RIGHT
+
+            self.player_chopping_animation = True
+            self.animation_timer = pygame.time.get_ticks()
+            self.cut_tree()
 
     def cut_tree(self):
         current_segment = self.tree[1]
@@ -137,6 +150,15 @@ class Game:
         time_reduction = (self.points // 10) * TIME_ACCELERATION
         bonus = max(MIN_TIME_BONUS, TIME_BONUS - time_reduction)
         self.remaining_time = min(self.remaining_time + bonus, MAX_TIME)
+
+    def draw_start_button(self):
+        pygame.draw.rect(self.window, WHITE, self.start_button_rect)
+        pygame.draw.rect(self.window, BLACK, self.start_button_rect, 2)
+
+
+        button_text = self.font.render("START", True, BLACK)
+        text_rect = button_text.get_rect(center=self.start_button_rect.center)
+        self.window.blit(button_text, text_rect)
 
     def draw_nickname_input(self):
         # Input field
@@ -248,15 +270,13 @@ class Game:
         # Draw start/game over text
         if not self.game_running:
             if self.points == 0:
-                start_text = self.font.render("START", True, BLACK)
-                click_text = self.small_font.render("Click to start", True, BLACK)
+                start_text = self.font.render("NEW GAME", True, BLACK)
                 self.window.blit(start_text, (220 - start_text.get_width() // 2, 300))
-                self.window.blit(click_text, (220 - click_text.get_width() // 2, 350))
+                self.draw_start_button()
             else:
                 game_over_text = self.font.render("GAME OVER", True, BLACK)
-                click_text = self.small_font.render("Click to start", True, BLACK)
                 self.window.blit(game_over_text, (220 - game_over_text.get_width() // 2, 300))
-                self.window.blit(click_text, (220 - click_text.get_width() // 2, 350))
+                self.draw_start_button()
 
                 if self.show_record_text:
                     record_text = self.font.render("NEW RECORD!", True, BLACK)
@@ -292,9 +312,6 @@ class Game:
                             self.player_chopping_animation = True
                             self.animation_timer = pygame.time.get_ticks()
                             self.cut_tree()
-                    elif event.key == pygame.K_SPACE:
-                        self.reset_game()
-                        self.game_running = True
 
             # Update time
             self.update_time()
