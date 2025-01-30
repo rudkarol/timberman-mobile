@@ -389,7 +389,7 @@ class Game:
 
             # Draw screen
             self.draw()
-            pygame.display.flip()
+            pygame.display.update()
             self.clock.tick(FPS)
 
         pygame.quit()
