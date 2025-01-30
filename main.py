@@ -13,11 +13,11 @@ WINDOW_HEIGHT = 956
 SCREEN_MIDDLE = WINDOW_WIDTH // 2
 FPS = 60
 
-INITIAL_TIME = 5000  # 5 sec start time
-MAX_TIME = 5000  # 5 sec max time
-TIME_BONUS = 400  # Time bonus
-MIN_TIME_BONUS = 150  # Min time bonus
-TIME_ACCELERATION = 30  # Reduce time bonus
+INITIAL_TIME = 5000  # 5 sec
+MAX_TIME = 5000  # 5 sec
+TIME_BONUS = 400
+MIN_TIME_BONUS = 150
+BONUS_REDUCTION = 30
 TIMER_BAR_HEIGHT = 30
 TIMER_BAR_POS_TOP = 30
 TIMER_BAR_POS_lEFT = 10
@@ -94,10 +94,10 @@ class Game:
         )
 
         self.rescue_button = pygame.Rect(
-            WINDOW_WIDTH // 2 - 75,
+            WINDOW_WIDTH // 2 - 80,
             WINDOW_HEIGHT - 100,
-            150,
-            50
+            160,
+            60
         )
 
     def reset_game(self):
@@ -196,7 +196,7 @@ class Game:
         self.points += 1
 
         # Add time bonus
-        time_reduction = (self.points // 10) * TIME_ACCELERATION
+        time_reduction = (self.points // 10) * BONUS_REDUCTION
         bonus = max(MIN_TIME_BONUS, TIME_BONUS - time_reduction)
         self.remaining_time = min(self.remaining_time + bonus, MAX_TIME)
 
@@ -240,10 +240,10 @@ class Game:
             return
 
         current_time = pygame.time.get_ticks()
-        dt = current_time - self.last_update
+        reduction = current_time - self.last_update
         self.last_update = current_time
 
-        self.remaining_time = max(0, self.remaining_time - dt)
+        self.remaining_time = max(0, self.remaining_time - reduction)
         if self.remaining_time <= 0:
             self.remaining_time = 0
             self.game_running = False
